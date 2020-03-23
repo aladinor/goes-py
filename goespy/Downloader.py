@@ -30,6 +30,13 @@ def ABI_Downloader(bucket, year, month, day, hour, product, channel):
     year, month, day, product, hour,channel, julianDay = __isAList(
         year, month, day, product, hour,channel, julianDay=julianDay)
 
+    if hour[0] != '00':
+        hour = [f'{int(hour[0]) - 1:02d}', hour[0]]
+    else:
+        day = [f'{int(day[0]) - 1:02d}', day[0]]
+        hour = ['23', hour[0]]
+        julianDay = [f'{int(julianDay[0]) - 1:03d}', julianDay[0]]
+
     ## for loop to all variable year (it's a list var)
     for i in year:
 
@@ -39,6 +46,7 @@ def ABI_Downloader(bucket, year, month, day, hour, product, channel):
             ## I used that while loop, because I think it's a solution more "presentable"
             ## that while will travel on the days list, same to the julianDay
             while days <= len(day) - 1 and days <= len(julianDay) - 1:
+                jd = julianDay[days]
                 for prod in product:
                     print("Downloading... the product %s " % prod)
                     for nindex in hour:
@@ -47,10 +55,8 @@ def ABI_Downloader(bucket, year, month, day, hour, product, channel):
                         ## maybe that's not a elegant solution.
                         ## s3.objects.filters it's a function from boto3 to list all keys on the bucket
                         ## using a prefix
-                        objs = goes16.objects.filter(
-                            Delimiter='/',
-                            Prefix="{0}/{1}/{2}/{3}/".format(
-                                prod, i, julianDay[days], nindex))
+                        objs = goes16.objects.filter(Delimiter='/', Prefix=f"{prod}/{i}/{jd}/{nindex}/")
+
                         for object in objs:
                             ## the keys it's a "path"+"filename" in the bucket, solution
                             ### we need only the filename, that's why used the rsplit function.
@@ -115,20 +121,25 @@ def Other_Products_Downloader(bucket, year, month, day, hour, product='GLM-L2-LC
     year, month, day, product, hour, julianDay = __isAList(
         year, month, day, product, hour, julianDay=julianDay)
 
+    if hour[0] != '00':
+        hour = [f'{int(hour[0]) - 1:02d}', hour[0]]
+    else:
+        day = [f'{int(day[0]) - 1:02d}', day[0]]
+        hour = ['23', hour[0]]
+        julianDay = [f'{int(julianDay[0]) - 1:03d}', julianDay[0]]
+
     for i in year:
         for mth in month:
             while days <= len(day) - 1 and days <= len(julianDay) - 1:
+                print(hour, day, julianDay, days)
+                jd = julianDay[days]
                 for prod in product:
                     print("Downloading... the product %s " % prod)
                     for nindex in hour:
-                        print("Downloading... the dataset from {0} UTC".format(
-                            nindex))
-                        objs = goes16.objects.filter(
-                            Delimiter='/',
-                            Prefix="{0}/{1}/{2}/{3}/".format(
-                                prod, i, julianDay[days], nindex))
+                        print("Downloading dataset to... {0} UTC".format(nindex))
 
-                        #print("{0}/{1}/{2}/{3}/".format(prod,i,julianDay[days],nindex))
+                        objs = goes16.objects.filter(Delimiter='/', Prefix=f"{prod}/{i}/{jd}/{nindex}/")
+
                         for object in objs:
 
                             filename = object.key.rsplit('/', 1)[1]
